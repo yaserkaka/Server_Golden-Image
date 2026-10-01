@@ -82,10 +82,10 @@ variable "vms" {
   validation {
     condition = alltrue(flatten([
       for vm in values(var.vms) : [
-        for role in vm.roles : contains(["docker", "hpc-compute", "k8s-node", "nfs-server", "web"], role)
+        for role in vm.roles : contains(["docker", "hpc-bench", "hpc-compute", "k8s-node", "nfs-server", "web"], role)
       ]
     ]))
-    error_message = "Unknown role. Available roles: docker, hpc-compute, k8s-node, nfs-server, web."
+    error_message = "Unknown role. Available roles: docker, hpc-bench, hpc-compute, k8s-node, nfs-server, web."
   }
 }
 
