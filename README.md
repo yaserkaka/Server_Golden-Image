@@ -1,6 +1,6 @@
 # Ubuntu Server Golden Image (Packer + cloud-init)
 
-[![ci](https://github.com/yaserkaka/ubuntu-golden-image/actions/workflows/ci.yml/badge.svg)](https://github.com/yaserkaka/ubuntu-golden-image/actions/workflows/ci.yml)
+[![ci](https://github.com/yaserkaka/Server_Golden-Image/actions/workflows/ci.yml/badge.svg)](https://github.com/yaserkaka/Server_Golden-Image/actions/workflows/ci.yml)
 
 Builds a hardened, generalized **Ubuntu 24.04 LTS** golden image, the Linux equivalent of a Windows Sysprep image, and clones it at scale on **KVM/libvirt** and **VMware vSphere**. Every clone boots as a unique machine with its own hostname, network, machine-id and SSH host keys, and **turns itself into a specific server (NFS, HPC compute, Docker, Kubernetes node, web) on first boot** based on the roles assigned at deploy time.
 
