@@ -50,6 +50,7 @@ The image stays generic. Each clone is given roles at deploy time, and on first 
 |---|---|
 | `nfs-server` | Shared storage: exports `/srv/shared` to the local subnet |
 | `hpc-compute` | HPC compute node: OpenMPI, Slurm `slurmd` + munge, `throughput-performance` tuning, trusted cluster network, `/shared` mounted from the NFS server |
+| `hpc-bench` | Builds the STREAM and OSU Micro-Benchmarks on the node for `make bench` (use with `hpc-compute`) |
 | `docker` | Container host: Docker Engine + Compose v2, log rotation, admins in the `docker` group |
 | `k8s-node` | Kubernetes node: swap off, kernel modules/sysctl, containerd (systemd cgroups), kubeadm/kubelet/kubectl, firewall ports, ready for `kubeadm init/join` |
 | `web` | nginx with a status page showing the clone's hostname, roles and image version |
@@ -58,8 +59,8 @@ The image stays generic. Each clone is given roles at deploy time, and on first 
 
 ```csv
 node01,192.168.122.11/24,2,2048,20,nfs-server+web
-node02,192.168.122.12/24,2,2048,30,hpc-compute
-node03,192.168.122.13/24,2,2048,20,hpc-compute
+node02,192.168.122.12/24,2,2048,30,hpc-compute+hpc-bench
+node03,192.168.122.13/24,2,2048,20,hpc-compute+hpc-bench
 ```
 
 **vSphere:** set `roles = ["hpc-compute"]` per VM and the shared `role_env` map in `terraform.tfvars`.
@@ -74,12 +75,33 @@ sudo golden-role apply web  # add a role later
 
 Role names are checked before anything is deployed. Each role runs once; failures are logged to `/var/log/golden-role.log` and reported by `make verify`. To add a role, drop a script into `files/roles/` and rebuild the image.
 
+## Benchmarks and reports
+
+Clones with the `hpc-bench` role can be benchmarked from your workstation, and two runs can be compared to prove the effect of a tuning change.
+
+| Benchmark | Measures | Where it runs |
+|---|---|---|
+| STREAM (Copy, Scale, Add, Triad) | Sustainable memory bandwidth, all vCPUs with OpenMP | Every hpc-bench node |
+| OSU `osu_latency` | MPI round-trip latency by message size | 2 ranks inside node 1 (shared memory) and between node 1 and node 2 (TCP) |
+| OSU `osu_bw` | MPI bandwidth by message size | Same as above |
+
+```bash
+make bench LABEL=baseline             # -> reports/bench-<date>-<time>-baseline/
+# change something, e.g. on every compute node: sudo tuned-adm profile virtual-guest
+make bench LABEL=virtual-guest
+make bench-compare A=reports/bench-...-baseline B=reports/bench-...-virtual-guest
+```
+
+Each run folder holds `report.md` (summary, node facts, STREAM table, OSU latency and bandwidth tables), the full results as `system.csv`, `stream.csv`, `osu_latency.csv`, `osu_bw.csv`, and the raw tool output in `raw/`. The compare report shows each metric for both runs with the % change and whether it got better or worse.
+
+For the between-nodes test, node 1 needs to start an MPI rank on node 2 over SSH. `benchmark.sh` installs a temporary key for that and removes it from both nodes when the run ends.
+
 ## Repository layout
 
 ```
 packer/              Packer template (qemu + vsphere-iso sources), variables, autoinstall seed
 scripts/provision/   OS configuration scripts, run in numeric order during the build
-scripts/             prepare.sh, generalize.sh, inspect-image.sh, verify-clones.sh
+scripts/             prepare.sh, generalize.sh, inspect-image.sh, verify-clones.sh, benchmark.sh, bench-compare.sh
 files/               Files copied into the image: cloud-init cfg, systemd units, golden-role, roles/
 deploy/kvm/          hosts.csv + roles.env + deploy.sh / destroy.sh (qcow2 overlays + cloud-init seed ISOs)
 deploy/vsphere/      Terraform: clones from the template, config via guestinfo
@@ -124,8 +146,8 @@ make tf-init tf-apply
 ```
 HOST             HOSTNAME   CLOUDINIT  ROOT   IMAGE           ROLES
 192.168.122.11   node01     done       19G    20261001-1430   nfs-server+web
-192.168.122.12   node02     done       29G    20261001-1430   hpc-compute
-192.168.122.13   node03     done       19G    20261001-1430   hpc-compute
+192.168.122.12   node02     done       29G    20261001-1430   hpc-compute+hpc-bench
+192.168.122.13   node03     done       19G    20261001-1430   hpc-compute+hpc-bench
 
 PASS: 3 clone(s) are unique and healthy.
 ```

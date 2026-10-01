@@ -7,7 +7,7 @@ SHELL_SCRIPTS := $(wildcard scripts/*.sh scripts/provision/*.sh deploy/kvm/*.sh 
 
 .DEFAULT_GOAL := help
 .PHONY: help init validate lint build-qemu build-vsphere inspect deploy-kvm render-kvm \
-        destroy-kvm verify tf-init tf-plan tf-apply tf-destroy clean
+        destroy-kvm verify bench bench-compare tf-init tf-plan tf-apply tf-destroy clean
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -45,6 +45,12 @@ destroy-kvm: ## Remove the KVM clones
 
 verify: ## Check clones are unique and healthy (machine-id, host keys, services)
 	./scripts/verify-clones.sh
+
+bench: ## Run STREAM + OSU on hpc-bench nodes and write a report (LABEL=name optional)
+	./scripts/benchmark.sh
+
+bench-compare: ## Compare two runs: make bench-compare A=reports/<before> B=reports/<after>
+	./scripts/bench-compare.sh $(A) $(B)
 
 # --- Deploy: vSphere ---------------------------------------------------------
 tf-init: ## terraform init for vSphere clones
