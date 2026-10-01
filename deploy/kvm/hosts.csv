@@ -1,0 +1,15 @@
+# name,ip_cidr,vcpus,memory_mb,disk_gb,roles
+# ip_cidr: a static address on the libvirt network, or "dhcp"
+# disk_gb: may be larger than the template; the root LV grows on first boot
+# roles:   joined with "+", applied on first boot (empty = plain base server)
+#          available: docker, hpc-compute, k8s-node, nfs-server, web
+#
+# Example: a small HPC cluster, one storage/web node and two compute nodes
+node01,192.168.122.11/24,2,2048,20,nfs-server+web
+node02,192.168.122.12/24,2,2048,30,hpc-compute
+node03,192.168.122.13/24,2,2048,20,hpc-compute
+#
+# More examples:
+# docker01,192.168.122.21/24,2,4096,40,docker
+# k8s-cp01,192.168.122.31/24,2,4096,30,k8s-node
+# plain01,dhcp,1,1024,20,

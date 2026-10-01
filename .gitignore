@@ -1,0 +1,18 @@
+# Build output
+output/
+packer_cache/
+*.qcow2
+*.iso
+
+# Secrets / local settings
+packer/*.pkrvars.hcl
+!packer/*.pkrvars.hcl.example
+deploy/vsphere/terraform.tfvars
+
+# Terraform
+deploy/vsphere/.terraform/
+*.tfstate
+*.tfstate.*
+
+# Rendered clone configs (DRY_RUN)
+deploy/kvm/.render/

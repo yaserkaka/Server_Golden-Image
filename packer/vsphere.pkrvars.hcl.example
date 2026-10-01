@@ -1,0 +1,12 @@
+# Copy to vsphere.pkrvars.hcl (git-ignored) and fill in.
+# Pass the password through the environment instead of this file:
+#   export PKR_VAR_vsphere_password='...'
+
+vsphere_server              = "vcenter.example.local"
+vsphere_username            = "packer@vsphere.local"
+vsphere_insecure_connection = false
+vsphere_datacenter          = "DC01"
+vsphere_cluster             = "Cluster01"
+vsphere_datastore           = "datastore1"
+vsphere_network             = "VM Network"
+vsphere_folder              = "Templates"

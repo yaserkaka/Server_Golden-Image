@@ -1,0 +1,37 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  packer:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-packer@main
+      - run: packer init packer/
+      - run: packer fmt -check -recursive packer/
+      - run: packer validate -syntax-only packer/
+
+  terraform:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform fmt -check -recursive deploy/vsphere
+      - run: terraform -chdir=deploy/vsphere init -backend=false
+      - run: terraform -chdir=deploy/vsphere validate
+
+  shell:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: shellcheck scripts/*.sh scripts/provision/*.sh deploy/kvm/*.sh files/sbin/*.sh files/roles/*.sh
+      - name: Render clone cloud-init files and validate their schema
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q cloud-init gettext-base
+          mkdir -p ~/.ssh && ssh-keygen -q -t ed25519 -N '' -f ~/.ssh/id_ed25519
+          DRY_RUN=1 ./deploy/kvm/deploy.sh
+          for f in deploy/kvm/.render/*/user-data; do cloud-init schema --config-file "$f"; done

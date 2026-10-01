@@ -1,0 +1,11 @@
+[Unit]
+Description=Grow root LVM volume to fill the disk
+After=local-fs.target
+Before=cloud-config.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/grow-root-lv
+
+[Install]
+WantedBy=multi-user.target

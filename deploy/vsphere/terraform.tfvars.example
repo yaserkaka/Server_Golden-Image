@@ -1,0 +1,37 @@
+# Copy to terraform.tfvars (git-ignored) and fill in.
+# Pass the password through the environment:  export TF_VAR_vsphere_password='...'
+
+vsphere_server   = "vcenter.example.local"
+vsphere_username = "terraform@vsphere.local"
+vsphere_insecure = false
+
+datacenter    = "DC01"
+cluster       = "Cluster01"
+datastore     = "datastore1"
+network       = "VM Network"
+vm_folder     = "Golden-Clones"
+template_name = "ubuntu-2404-golden-20261001-1200"
+
+domain      = "lab.local"
+gateway     = "10.10.20.1"
+dns_servers = ["10.10.20.10", "10.10.20.11"]
+
+admin_user     = "ops"
+ssh_public_key = "ssh-ed25519 AAAA... you@workstation"
+
+# roles: docker, hpc-compute, k8s-node, nfs-server, web (applied on first boot)
+vms = {
+  storage01 = { ip_cidr = "10.10.20.21/24", cpus = 2, memory_mb = 4096, disk_gb = 100, roles = ["nfs-server", "web"] }
+  hpc01     = { ip_cidr = "10.10.20.31/24", cpus = 8, memory_mb = 16384, disk_gb = 40, roles = ["hpc-compute"] }
+  hpc02     = { ip_cidr = "10.10.20.32/24", cpus = 8, memory_mb = 16384, disk_gb = 40, roles = ["hpc-compute"] }
+  apps01    = { ip_cidr = "10.10.20.41/24", cpus = 4, memory_mb = 8192, disk_gb = 60, roles = ["docker"] }
+}
+
+# Settings handed to every clone's roles
+role_env = {
+  NFS_SERVER     = "10.10.20.21"
+  NFS_EXPORT_DIR = "/srv/shared"
+  NFS_MOUNT      = "/shared"
+  CLUSTER_CIDR   = "10.10.20.0/24"
+  K8S_VERSION    = "v1.37"
+}

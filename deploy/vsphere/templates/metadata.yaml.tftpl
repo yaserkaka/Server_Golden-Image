@@ -1,0 +1,21 @@
+instance-id: ${hostname}
+local-hostname: ${hostname}
+network:
+  version: 2
+  ethernets:
+    primary:
+      match:
+        name: "e*"
+%{ if ip_cidr == "dhcp" ~}
+      dhcp4: true
+%{ else ~}
+      dhcp4: false
+      addresses:
+        - ${ip_cidr}
+      routes:
+        - to: default
+          via: ${gateway}
+      nameservers:
+        search: [${domain}]
+        addresses: ${jsonencode(dns_servers)}
+%{ endif ~}

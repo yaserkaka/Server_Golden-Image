@@ -1,0 +1,33 @@
+#cloud-config
+hostname: ${hostname}
+fqdn: ${hostname}.${domain}
+users:
+  - name: ${admin_user}
+    gecos: Operations admin
+    groups: [sudo]
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ${ssh_public_key}
+package_update: false
+final_message: "Clone ${hostname} is ready (cloud-init finished after $UPTIME seconds)"
+%{ if length(roles) > 0 ~}
+write_files:
+  - path: /etc/golden-image/roles
+    permissions: "0644"
+    content: |
+%{ for role in roles ~}
+      ${role}
+%{ endfor ~}
+%{ if length(role_env) > 0 ~}
+  - path: /etc/golden-image/role.env
+    permissions: "0600"
+    content: |
+%{ for key, value in role_env ~}
+      ${key}=${value}
+%{ endfor ~}
+%{ endif ~}
+runcmd:
+  - [/usr/local/sbin/golden-role, apply]
+%{ endif ~}
