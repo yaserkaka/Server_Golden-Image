@@ -23,8 +23,11 @@ apt-get install -y -q "${PACKAGES[@]}"
 log "Removing unwanted packages: ${REMOVE_PACKAGES[*]}"
 apt-get purge -y -q "${REMOVE_PACKAGES[@]}"
 
-log "Upgrading to the latest patch level"
-apt-get upgrade -y -q -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold
+log "Upgrading to the latest patch level (including new kernel packages)"
+# full-upgrade, not upgrade: a kernel security update ships as a new package
+# (linux-image-<new ABI>), which plain `upgrade` holds back. Clones boot the
+# newest kernel on first boot; generalize.sh's autoremove keeps the running one.
+apt-get full-upgrade -y -q -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold
 
 # --- Time -------------------------------------------------------------------
 log "Setting timezone to ${TIMEZONE} and enabling chrony"
